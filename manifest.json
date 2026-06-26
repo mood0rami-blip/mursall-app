@@ -1,0 +1,12 @@
+{
+  "background_color": "#ffffff",
+  "dir": "ltr",
+  "display": "standalone",
+  "name": "مرسال",
+  "orientation": "any",
+  "scope": "/",
+  "short_name": "مرسال",
+  "start_url": "/",
+  "theme_color": "#ffffff",
+  "description": "تطبيق بسيط لإرسال إيميل عبر Gmail"
+}
