@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>مرسال - إيميل</title>
+<style>
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: 'Segoe UI', Tahoma, Arial, sans-serif;
+    background: linear-gradient(160deg, #0f1117, #1a1d29);
+    color: #f1f1f1;
+    min-height: 100vh;
+    padding: 24px 16px 60px;
+  }
+  .card {
+    max-width: 480px;
+    margin: 0 auto;
+    background: #1e2230;
+    border-radius: 18px;
+    padding: 24px 20px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.4);
+  }
+  h1 {
+    font-size: 22px;
+    text-align: center;
+    margin-bottom: 4px;
+  }
+  .sub {
+    text-align: center;
+    color: #9aa0b4;
+    font-size: 13px;
+    margin-bottom: 22px;
+  }
+  label {
+    display: block;
+    font-size: 14px;
+    margin: 16px 0 6px;
+    color: #c7cbe0;
+  }
+  input, textarea {
+    width: 100%;
+    padding: 12px 14px;
+    border-radius: 10px;
+    border: 1px solid #353b52;
+    background: #14161f;
+    color: #fff;
+    font-size: 15px;
+    outline: none;
+  }
+  textarea { resize: vertical; min-height: 110px; }
+  input:focus, textarea:focus { border-color: #6c8cff; }
+  .emails-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 8px;
+  }
+  .chip {
+    background: #2a3050;
+    color: #cdd6ff;
+    padding: 6px 10px;
+    border-radius: 20px;
+    font-size: 13px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .chip button {
+    background: none;
+    border: none;
+    color: #ff8a8a;
+    cursor: pointer;
+    font-size: 14px;
+    padding: 0;
+  }
+  .row {
+    display: flex;
+    gap: 8px;
+    margin-top: 6px;
+  }
+  .row input { flex: 1; }
+  .row button {
+    background: #3a4270;
+    color: #fff;
+    border: none;
+    border-radius: 10px;
+    padding: 0 16px;
+    font-size: 14px;
+    cursor: pointer;
+  }
+  .send-btn {
+    width: 100%;
+    margin-top: 26px;
+    background: linear-gradient(135deg, #5b7cfa, #8a6cff);
+    color: #fff;
+    border: none;
+    padding: 14px;
+    border-radius: 12px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  .send-btn:active { transform: scale(0.98); }
+  .save-note {
+    text-align: center;
+    font-size: 12px;
+    color: #6f7690;
+    margin-top: 14px;
+  }
+  .clear-btn {
+    width: 100%;
+    margin-top: 10px;
+    background: transparent;
+    color: #ff8a8a;
+    border: 1px solid #4a2a2a;
+    padding: 10px;
+    border-radius: 10px;
+    font-size: 13px;
+    cursor: pointer;
+  }
+  .err {
+    color: #ff8a8a;
+    font-size: 13px;
+    margin-top: 6px;
+    min-height: 16px;
+  }
+</style>
+</head>
+<body>
+
+<div class="card">
+  <h1>📧 مرسال</h1>
+  <div class="sub">تطبيق بسيط لإرسال إيميل عبر Gmail — بياناتك تُحفظ على جهازك فقط ولا تُرسل لأي مكان غير Gmail</div>
+
+  <label>الموضوع</label>
+  <input id="subject" type="text" placeholder="اكتب موضوع الرسالة">
+
+  <label>نص الرسالة</label>
+  <textarea id="message" placeholder="اكتب الرسالة هنا"></textarea>
+
+  <label>الإيميلات المستلمة</label>
+  <div class="row">
+    <input id="emailInput" type="email" placeholder="example@gmail.com">
+    <button onclick="addEmail()">إضافة</button>
+  </div>
+  <div class="err" id="emailErr"></div>
+  <div class="emails-list" id="emailsList"></div>
+
+  <button class="send-btn" onclick="sendEmail()">🚀 إرسال عبر Gmail</button>
+  <button class="clear-btn" onclick="clearAll()">🗑️ مسح كل البيانات المحفوظة</button>
+
+  <div class="save-note">يتم الحفظ تلقائياً على هذا الجهاز فقط، ولا أحد غيرك يقدر يشوفها</div>
+</div>
+
+<script>
+  let emails = [];
+
+  function loadData() {
+    try {
+      const subject = localStorage.getItem('mursal_subject');
+      const message = localStorage.getItem('mursal_message');
+      const savedEmails = localStorage.getItem('mursal_emails');
+      if (subject !== null) document.getElementById('subject').value = subject;
+      if (message !== null) document.getElementById('message').value = message;
+      if (savedEmails !== null) emails = JSON.parse(savedEmails);
+      renderEmails();
+    } catch (e) {
+      console.log('لا توجد بيانات محفوظة بعد');
+    }
+  }
+
+  function saveField(key, value) {
+    try { localStorage.setItem(key, value); } catch (e) { console.log('فشل الحفظ', e); }
+  }
+
+  function renderEmails() {
+    const list = document.getElementById('emailsList');
+    list.innerHTML = '';
+    emails.forEach((em, i) => {
+      const chip = document.createElement('div');
+      chip.className = 'chip';
+      chip.innerHTML = `<span>${em}</span><button onclick="removeEmail(${i})">✕</button>`;
+      list.appendChild(chip);
+    });
+  }
+
+  function isValidEmail(em) {
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(em);
+  }
+
+  function addEmail() {
+    const input = document.getElementById('emailInput');
+    const errBox = document.getElementById('emailErr');
+    const val = input.value.trim();
+    errBox.textContent = '';
+    if (!val) return;
+    if (!isValidEmail(val)) {
+      errBox.textContent = 'صيغة الإيميل غير صحيحة';
+      return;
+    }
+    if (emails.includes(val)) {
+      errBox.textContent = 'هذا الإيميل مضاف مسبقاً';
+      return;
+    }
+    emails.push(val);
+    saveField('mursal_emails', JSON.stringify(emails));
+    input.value = '';
+    renderEmails();
+  }
+
+  function removeEmail(i) {
+    emails.splice(i, 1);
+    saveField('mursal_emails', JSON.stringify(emails));
+    renderEmails();
+  }
+
+  function sendEmail() {
+    const subject = document.getElementById('subject').value.trim();
+    const message = document.getElementById('message').value.trim();
+    if (emails.length === 0) {
+      alert('أضف إيميل واحد على الأقل قبل الإرسال');
+      return;
+    }
+    const to = emails.join(',');
+    const mailtoLink = `mailto:${encodeURIComponent(to).replace(/%2C/g,',')}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(message)}`;
+    window.location.href = mailtoLink;
+  }
+
+  function clearAll() {
+    if (!confirm('هل أنت متأكد من مسح كل البيانات المحفوظة؟')) return;
+    localStorage.removeItem('mursal_subject');
+    localStorage.removeItem('mursal_message');
+    localStorage.removeItem('mursal_emails');
+    document.getElementById('subject').value = '';
+    document.getElementById('message').value = '';
+    emails = [];
+    renderEmails();
+  }
+
+  document.getElementById('subject').addEventListener('input', e => saveField('mursal_subject', e.target.value));
+  document.getElementById('message').addEventListener('input', e => saveField('mursal_message', e.target.value));
+  document.getElementById('emailInput').addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); addEmail(); } });
+
+  loadData();
+</script>
+
+</body>
+</html>
